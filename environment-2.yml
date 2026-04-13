@@ -1,0 +1,11 @@
+name: science_bot
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - python-telegram-bot==21.6
+    - aiohttp==3.9.5
+    - python-dotenv==1.0.1
