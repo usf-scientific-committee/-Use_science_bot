@@ -43,8 +43,8 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # افتح .env وأضف:
-# BOT_TOKEN=<توكن بوتك من @BotFather>
-# ADMIN_IDS=<معرف حسابك في تيليغرام>
+# BOT_TOKEN=<توكن بوتك من @BotFather>8693784263:AAFlgstAc5MICwwWmbIUOPeGUmeusV9-F5k
+# ADMIN_IDS=<معرف حسابك في تيليغرام>8027320875
 ```
 
 ### 4. تشغيل البوت
