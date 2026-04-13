@@ -1,0 +1,86 @@
+name: Science Bot — Python with Conda
+
+on:
+  push:
+    branches: [ "Use_science_bot", "main" ]
+  pull_request:
+    branches: [ "Use_science_bot", "main" ]
+  workflow_dispatch:
+
+jobs:
+  # ── Job 1: Test & Validate ──────────────────────────
+  test:
+    name: Test Bot Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yml
+          activate-environment: science_bot
+          python-version: "3.10"
+          auto-activate-base: false
+
+      - name: Verify installation
+        shell: bash -el {0}
+        run: |
+          python --version
+          pip list | grep telegram
+          echo "✅ Environment ready"
+
+      - name: Syntax check
+        shell: bash -el {0}
+        run: |
+          python -m py_compile config.py
+          python -m py_compile database.py
+          python -m py_compile classifier.py
+          python -m py_compile handlers.py
+          python -m py_compile main.py
+          echo "✅ All files pass syntax check"
+
+      - name: Test classifier
+        shell: bash -el {0}
+        env:
+          BOT_TOKEN: dummy
+          OWNER_ID: "123"
+          ADMIN_IDS: "123"
+        run: |
+          mkdir -p data
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from classifier import classify_content
+          is_sci, cats, kws, tags, score = classify_content('فيزياء كمية وجزيئات دون ذرية #علوم')
+          assert is_sci == True, 'Classifier failed!'
+          print(f'✅ Classifier OK: score={score}, cats={cats}')
+          "
+
+  # ── Job 2: Deploy to Railway ────────────────────────
+  deploy:
+    name: Deploy to Railway
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/Use_science_bot' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "⚠️ RAILWAY_TOKEN not set — skipping deploy"
+            echo "Add RAILWAY_TOKEN to GitHub Secrets to enable auto-deploy"
+          else
+            railway up --detach
+            echo "✅ Deployed to Railway"
+          fi
